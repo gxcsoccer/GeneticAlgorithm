@@ -1,16 +1,16 @@
-var GENE_SIZE = 20,
+var GENE_SIZE = 50,
 	splice = Array.prototype.splice;
 
 /**
  * 个体
  */
-var Individual = function() {
+var Individual = function(tpl) {
 		// 染色体
 		this.chromosome = [];
 		for (var i = 0; i < GENE_SIZE; i++) {
-			this.chromosome[i] = Math.round(Math.random());
+			this.chromosome[i] = tpl ? tpl.chromosome[i] : Math.round(Math.random());
 		}
-		this.fitness = 0;
+		this.fitness = tpl ? tpl.fitness : 0;
 		this.memo = {};
 	}
 
@@ -23,24 +23,22 @@ Individual.prototype = {
 		this.chromosome[pos] = (this.chromosome[pos] + 1) % 2;
 	},
 	compare: function(other) {
-		var key = other.toString();
-		if (this.memo[key] == null) {
-			var same = 0;
-			for (var i = 0; i < GENE_SIZE; i++) {
-				if (other.chromosome[i] === this.chromosome[i]) {
-					same++;
-				}
+		var same = 0;
+		for (var i = 0; i < GENE_SIZE; i++) {
+			if (other.chromosome[i] === this.chromosome[i]) {
+				same++;
 			}
-			this.memo[key] = same / GENE_SIZE;
 		}
-
-		return this.memo[key];
+		return same / (GENE_SIZE - 1);
 	},
 	toString: function() {
 		return this.chromosome.join('');
 	},
 	valueOf: function() {
 		return this.fitness;
+	},
+	clone: function() {
+		return new Individual(this);
 	}
 }
 
@@ -63,45 +61,64 @@ var GeneticAlgorithm = function(popSize, elitist, Pc, Pm) {
 GeneticAlgorithm.prototype = {
 	go: function() {
 		var N = 0,
-			newPop, i, r, matched;
+			max = 0,
+			newPop, i, r;
 
 		console.log("elitist: " + this.elitist.toString());
+		for (i = 0; i < this.popSize; i++) {
+			if (this.population[i].fitness > 0.8) {
+				console.log('bingo: ' + this.population[i].toString());
+				return;
+			}
+		}
+
 		do {
-			newPop = [];
-			for (i = 0; i < this.popSize; i++) {
+			this.population.sort(function(a, b) {
+				return a.fitness === b.fitness ? 0 : a.fitness < b.fitness ? 1 : -1;
+			});
+
+			if (max > this.population[0].fitness) {
+				console.log(this.population[0].fitness + ' ' + this.population[49].fitness);
+				console.log('typeof: ' + (typeof this.population[0].fitness));
+				console.log('typeof: ' + (typeof this.population[49].fitness));
+				throw 'exception';
+			} else {
+				max = this.population[0].fitness;
+			}
+
+			console.log(this.population[0].fitness);
+
+			newPop = [this.population[0].clone(), this.population[1].clone()];
+			for (i = 2; i < this.popSize; i++) {
 				newPop.push(this.rouletteWheelSelect());
 			}
 
-			for (i = 0; i < this.popSize; i += 2) {
+			for (i = 2; i < this.popSize; i += 2) {
 				r = Math.random();
 				if (r <= this.Pc) {
 					this.crossover(newPop[i], newPop[i + 1]);
 				}
 			}
 
-			for (i = 0; i < this.popSize; i++) {
+			for (i = 2; i < this.popSize; i++) {
 				r = Math.random();
 				if (r <= this.Pm) {
 					newPop[i].mutation();
 				}
 			}
 
-			matched = 0;
 			for (i = 0; i < this.popSize; i++) {
 				newPop[i].fitness = this.elitist.compare(newPop[i]);
-				if (newPop[i].fitness === 1) {
-					console.log('bingo: ' + newPop[i].toString());
+				if (newPop[i].fitness > 0.8) {
+					console.log('bingo at ' + N + ': ' + newPop[i].fitness + ' ' + newPop[i].toString());
 					return;
-				} else if (newPop[i].fitness > matched) {
-					matched = newPop[i].fitness;
 				}
 			}
 
 			this.population = newPop;
 			N++;
 		} while (N < 100000);
-
-		console.log("result: " + Math.max.apply(Math, this.population));
+		console.log('finish at ' + this.population[0].fitness + ': ' + this.population[0].toString());
 	},
 	rouletteWheelSelect: function() {
 		var m = 0,
@@ -111,7 +128,7 @@ GeneticAlgorithm.prototype = {
 			 *  因此i被选中的概率是P[i]
 			 */
 			m = m + this.population[i].fitness;
-			if (r <= m) return this.population[i];
+			if (r <= m) return this.population[i].clone();
 		}
 	},
 	crossover: function(i1, i2) {
