@@ -61,12 +61,11 @@ var GeneticAlgorithm = function(popSize, elitist, Pc, Pm) {
 GeneticAlgorithm.prototype = {
 	go: function() {
 		var N = 0,
-			max = 0,
 			newPop, i, r;
 
 		console.log("elitist: " + this.elitist.toString());
 		for (i = 0; i < this.popSize; i++) {
-			if (this.population[i].fitness > 0.8) {
+			if (this.population[i].fitness >= 1) {
 				console.log('bingo: ' + this.population[i].toString());
 				return;
 			}
@@ -76,15 +75,6 @@ GeneticAlgorithm.prototype = {
 			this.population.sort(function(a, b) {
 				return a.fitness === b.fitness ? 0 : a.fitness < b.fitness ? 1 : -1;
 			});
-
-			if (max > this.population[0].fitness) {
-				console.log(this.population[0].fitness + ' ' + this.population[49].fitness);
-				console.log('typeof: ' + (typeof this.population[0].fitness));
-				console.log('typeof: ' + (typeof this.population[49].fitness));
-				throw 'exception';
-			} else {
-				max = this.population[0].fitness;
-			}
 
 			console.log(this.population[0].fitness);
 
@@ -109,7 +99,7 @@ GeneticAlgorithm.prototype = {
 
 			for (i = 0; i < this.popSize; i++) {
 				newPop[i].fitness = this.elitist.compare(newPop[i]);
-				if (newPop[i].fitness > 0.8) {
+				if (newPop[i].fitness >= 1) {
 					console.log('bingo at ' + N + ': ' + newPop[i].fitness + ' ' + newPop[i].toString());
 					return;
 				}
