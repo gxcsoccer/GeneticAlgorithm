@@ -121,6 +121,9 @@ Graph.prototype = {
 		resemble(img).compareTo(hiddenCanvas).onComplete(function(data) {
 			that.fitness = (100 - data.misMatchPercentage) / 100;
 		});
+	},
+	clone: function() {
+		
 	}
 }
 
@@ -144,10 +147,8 @@ var GeneticAlgorithm = function(popSize, Pc, Pm) {
 
 GeneticAlgorithm.prototype = {
 	go: function() {
-		var N = 0,
-			newPop, i, r;
 
-		for (i = 0; i < this.popSize; i++) {
+		for (var i = 0; i < this.popSize; i++) {
 			if (this.population[i].fitness >= 0.8) {
 				console.log('bingo!' + this.population[i].toString());
 				this.population[i].draw(context);
@@ -155,45 +156,51 @@ GeneticAlgorithm.prototype = {
 			}
 		}
 
-		do {
-			this.population.sort(function(a, b) {
-				return a.fitness === b.fitness ? 0 : a.fitness < b.fitness ? 1 : -1;
-			});
+		this.N = 0;
+		this.iteract();
+	},
+	iteract: function() {
+		var newPop, i, r;
 
-			console.log(this.population[0].fitness);
-			//this.population[0].draw(context);
+		this.population.sort(function(a, b) {
+			return a.fitness === b.fitness ? 0 : a.fitness < b.fitness ? 1 : -1;
+		});
 
-			newPop = [this.population[0], this.population[1]];
-			for (i = 2; i < this.popSize; i++) {
-				newPop.push(this.rouletteWheelSelect());
+		console.log(this.population[0].fitness);
+		this.population[0].draw(context);
+		newPop = [this.population[0], this.population[1]];
+		for (i = 2; i < this.popSize; i++) {
+			newPop.push(this.rouletteWheelSelect());
+		}
+
+		for (i = 2; i < this.popSize; i += 2) {
+			r = Math.random();
+			if (r <= this.Pc) {
+				this.crossover(newPop[i], newPop[i + 1]);
 			}
+		}
 
-			for (i = 2; i < this.popSize; i += 2) {
-				r = Math.random();
-				if (r <= this.Pc) {
-					this.crossover(newPop[i], newPop[i + 1]);
-				}
+		for (i = 2; i < this.popSize; i++) {
+			r = Math.random();
+			if (r <= this.Pm) {
+				newPop[i].mutation();
 			}
+		}
 
-			for (i = 2; i < this.popSize; i++) {
-				r = Math.random();
-				if (r <= this.Pm) {
-					newPop[i].mutation();
-				}
+		for (i = 0; i < this.popSize; i++) {
+			newPop[i].calculateFitness();
+			if (newPop[i].fitness >= 0.8) {
+				console.log('bingo at ' + N);
+				this.population[i].draw(context);
+				return;
 			}
+		}
 
-			for (i = 0; i < this.popSize; i++) {
-				newPop[i].calculateFitness();
-				if (newPop[i].fitness >= 0.8) {
-					console.log('bingo at ' + N);
-					this.population[i].draw(context);
-					return;
-				}
-			}
+		this.population = newPop;
 
-			this.population = newPop;
-			N++;
-		} while (N < 1000);
+		if(this.N++ < 1000) {
+			requestAnimationFrame(this.iteract.bind(this));
+		}
 	},
 	rouletteWheelSelect: function() {
 		var m = 0,
