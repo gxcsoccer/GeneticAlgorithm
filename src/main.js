@@ -83,24 +83,30 @@ Triangle.prototype = {
 
 };
 
-Triangle.createTriangle = function() {
-	return new Triangle(randomPosition(), randomPosition(), randomPosition(), randomColor());
+Triangle.createTriangle = function(template) {
+	return new Triangle(template ? template.p1 : randomPosition(), template ? template.p2 : randomPosition(), template ? template.p3 : randomPosition(), template ? template.color : randomColor());
 };
 
 
 /**
  * 单体
  */
-var GENE_SIZE = 50;
+var GENE_SIZE = 100;
 
-var Graph = function() {
+var Graph = function(template) {
 		this.collection = [];
 
-		for (var i = 0; i < GENE_SIZE; i++) {
-			this.collection.push(Triangle.createTriangle());
+		if (template) {
+			for (var i = 0; i < GENE_SIZE; i++) {
+				this.collection.push(Triangle.createTriangle(template.collection[i]));
+			}
+			this.fitness = template.fitness;
+		} else {
+			for (var i = 0; i < GENE_SIZE; i++) {
+				this.collection.push(Triangle.createTriangle());
+			}
+			this.calculateFitness();
 		}
-
-		this.calculateFitness();
 	};
 
 Graph.prototype = {
@@ -118,12 +124,12 @@ Graph.prototype = {
 		this.draw(hiddenContext);
 
 		var that = this;
-		resemble(img).compareTo(hiddenCanvas).onComplete(function(data) {
+		resemble(img).compareTo(hiddenCanvas).ignoreNothing().onComplete(function(data) {
 			that.fitness = (100 - data.misMatchPercentage) / 100;
 		});
 	},
 	clone: function() {
-		
+		return new Graph(this);
 	}
 }
 
@@ -140,8 +146,8 @@ var GeneticAlgorithm = function(popSize, Pc, Pm) {
 			this.population.push(idv);
 		}
 		this.popSize = popSize;
-		this.Pc = Pc || 1;
-		this.Pm = Pm || 0.0001;
+		this.Pc = Pc || 0.5;
+		this.Pm = Pm || 1;
 	}
 
 
@@ -166,9 +172,9 @@ GeneticAlgorithm.prototype = {
 			return a.fitness === b.fitness ? 0 : a.fitness < b.fitness ? 1 : -1;
 		});
 
-		console.log(this.population[0].fitness);
+		console.log(this.population[0].fitness + ' at: ' + this.N);
 		this.population[0].draw(context);
-		newPop = [this.population[0], this.population[1]];
+		newPop = [this.population[0].clone(), this.population[1].clone()];
 		for (i = 2; i < this.popSize; i++) {
 			newPop.push(this.rouletteWheelSelect());
 		}
@@ -198,7 +204,7 @@ GeneticAlgorithm.prototype = {
 
 		this.population = newPop;
 
-		if(this.N++ < 1000) {
+		if (this.N++ < 120000) {
 			requestAnimationFrame(this.iteract.bind(this));
 		}
 	},
@@ -210,7 +216,7 @@ GeneticAlgorithm.prototype = {
 			 *  因此i被选中的概率是P[i]
 			 */
 			m = m + this.population[i].fitness;
-			if (r <= m) return this.population[i];
+			if (r <= m) return this.population[i].clone();
 		}
 	},
 	crossover: function(i1, i2) {
@@ -225,7 +231,7 @@ window.onload = function() {
 	canvas = document.getElementById('canvas');
 	context = canvas.getContext('2d');
 
-	var ga = new GeneticAlgorithm(10);
+	var ga = new GeneticAlgorithm(100);
 	ga.go();
 };
 
