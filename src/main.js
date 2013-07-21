@@ -10,6 +10,10 @@ var requestAnimationFrame = window.requestAnimationFrame || window.mozRequestAni
 	splice = Array.prototype.splice,
 	canvas, context;
 
+requestAnimationFrame = function(fn) {
+	setTimeout(fn, 0)
+};
+
 img.src = 'img/Firefox.png';
 
 /**
@@ -46,6 +50,18 @@ function randomPosition() {
 	}
 }
 
+function randomPosition2(center) {
+	var r = 100;
+
+	var x = (Math.random() * r) - r / 2,
+		y = (Math.random() * r) - r / 2;
+
+	return {
+		x: center.x + x,
+		y: center.y + y
+	};
+}
+
 function randomColor() {
 	return new Color(~~ (Math.random() * 255), ~~ (Math.random() * 255), ~~ (Math.random() * 255), Math.random());
 }
@@ -60,27 +76,7 @@ Triangle.prototype = {
 		context.fillStyle = this.color.toString();
 		context.fill();
 		context.closePath();
-	},
-	mutation: function() {
-		var index = ~~ (Math.randon() * 3);
-		switch (index) {
-		case 0:
-			this.p1 = randomPosition();
-			break;
-		case 1:
-			this.p2 = randomPosition();
-			break;
-		case 2:
-			this.p3 = randomPosition();
-			break;
-		case 3:
-			this.color = randomColor();
-			break;
-		default:
-			return;
-		}
-	},
-
+	}
 };
 
 Triangle.createTriangle = function(template) {
@@ -91,7 +87,7 @@ Triangle.createTriangle = function(template) {
 /**
  * 单体
  */
-var GENE_SIZE = 100;
+var GENE_SIZE = 50;
 
 var Graph = function(template) {
 		this.collection = [];
@@ -231,7 +227,7 @@ window.onload = function() {
 	canvas = document.getElementById('canvas');
 	context = canvas.getContext('2d');
 
-	var ga = new GeneticAlgorithm(100);
+	var ga = new GeneticAlgorithm(50);
 	ga.go();
 };
 
