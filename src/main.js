@@ -38,6 +38,7 @@ var Triangle = function(p1, p2, p3, color) {
 		this.p2 = p2;
 		this.p3 = p3;
 		this.color = color;
+		this.radius = 15;
 	};
 
 function randomPosition() {
@@ -69,10 +70,13 @@ function randomColor() {
 Triangle.prototype = {
 	draw: function(context) {
 		context.beginPath();
-		context.moveTo(this.p1.x, this.p1.y);
-		context.lineTo(this.p2.x, this.p2.y);
-		context.lineTo(this.p3.x, this.p3.y);
-		context.lineTo(this.p1.x, this.p1.y);
+		// context.moveTo(this.p1.x, this.p1.y);
+		// context.lineTo(this.p2.x, this.p2.y);
+		// context.lineTo(this.p3.x, this.p3.y);
+		// context.lineTo(this.p1.x, this.p1.y);
+		// context.fillStyle = this.color.toString();
+		// context.fill();
+		context.arc(this.p1.x, this.p1.y, this.radius, 0, Math.PI*2, true);
 		context.fillStyle = this.color.toString();
 		context.fill();
 		context.closePath();
@@ -87,7 +91,7 @@ Triangle.createTriangle = function(template) {
 /**
  * 单体
  */
-var GENE_SIZE = 50;
+var GENE_SIZE = 200;
 
 var Graph = function(template) {
 		this.collection = [];
