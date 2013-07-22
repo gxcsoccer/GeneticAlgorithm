@@ -70,13 +70,10 @@ function randomColor() {
 Triangle.prototype = {
 	draw: function(context) {
 		context.beginPath();
-		// context.moveTo(this.p1.x, this.p1.y);
-		// context.lineTo(this.p2.x, this.p2.y);
-		// context.lineTo(this.p3.x, this.p3.y);
-		// context.lineTo(this.p1.x, this.p1.y);
-		// context.fillStyle = this.color.toString();
-		// context.fill();
-		context.arc(this.p1.x, this.p1.y, this.radius, 0, Math.PI*2, true);
+		context.moveTo(this.p1.x, this.p1.y);
+		context.lineTo(this.p2.x, this.p2.y);
+		context.lineTo(this.p3.x, this.p3.y);
+		context.lineTo(this.p1.x, this.p1.y);
 		context.fillStyle = this.color.toString();
 		context.fill();
 		context.closePath();
@@ -87,6 +84,26 @@ Triangle.createTriangle = function(template) {
 	return new Triangle(template ? template.p1 : randomPosition(), template ? template.p2 : randomPosition(), template ? template.p3 : randomPosition(), template ? template.color : randomColor());
 };
 
+/**
+ * 圆
+ */
+var Circle = function(pos, radius, color) {
+		this.pos = pos;
+		this.radius = radius;
+		this.color = color;
+	};
+
+Circle.prototype = {
+	draw: function(context) {
+		context.arc(this.pos.x, this.pos.y, this.radius, 0, Math.PI * 2, true);
+		context.fillStyle = this.color.toString();
+		context.fill();
+	}
+}
+
+Circle.createCircle = function(template) {
+	return new Circle(template ? template.pos : randomPosition(), template ? template.radius : (5 + (Math.random() * 15)), randomColor());
+};
 
 /**
  * 单体
