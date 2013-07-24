@@ -11,7 +11,7 @@ var Textify = (function() {
 	var w = "Custom";
 	var k = 10;
 	var r = 15;
-	var I = {
+	var preset = {
 		ABC: {
 			preset: "ABC",
 			filter: "None",
@@ -135,10 +135,10 @@ var Textify = (function() {
 		}
 	};
 	var guiConfig = {},
-		gui, x, N, W, l, s, U, E, J, q, B, u, progress, S, y, H, O, hiddenCanvas, hiddenContext, output, canvas, context, G = 0,
+		gui, x, N, W, l, s, U, E, J, q, B, u, progress, progressContent, input, browseBtn, saveBtn, hiddenCanvas, hiddenContext, output, canvas, context, G = 0,
 		img, imageData, af, n, a = 1,
 		c = 1,
-		Q = false,
+		imgLoaded = false,
 		j = false,
 		P = !! navigator.userAgent.toLowerCase().match(/ipod/gi),
 		i = !! navigator.userAgent.toLowerCase().match(/ipad/gi),
@@ -156,57 +156,57 @@ var Textify = (function() {
 		output.setAttribute("class", "textify-output-html");
 		progress = document.createElement("div");
 		progress.setAttribute("class", "textify-progress");
-		S = document.createElement("div");
-		progress.appendChild(S);
+		progressContent = document.createElement("div");
+		progress.appendChild(progressContent);
 		progressText = document.createElement("p");
 		progress.appendChild(progressText);
-		y = document.createElement("input");
-		y.setAttribute("type", "file");
-		y.style.visibility = "hidden";
-		document.body.appendChild(y);
+		input = document.createElement("input");
+		input.setAttribute("type", "file");
+		input.style.visibility = "hidden";
+		document.body.appendChild(input);
 		document.body.appendChild(canvas);
 		document.body.appendChild(output);
 		document.body.appendChild(progress);
-		H = document.querySelector(".browse-button");
-		O = document.querySelector(".save-button");
-		window.addEventListener("resize", z, false);
-		document.addEventListener("dragover", function(aj) {
-			aj.preventDefault();
+		browseBtn = document.querySelector(".browse-button");
+		saveBtn = document.querySelector(".save-button");
+		window.addEventListener("resize", onResize, false);
+		document.addEventListener("dragover", function(ev) {
+			ev.preventDefault();
 		}, false);
-		document.addEventListener("dragenter", function(aj) {
-			aj.preventDefault();
+		document.addEventListener("dragenter", function(ev) {
+			ev.preventDefault();
 		}, false);
-		document.addEventListener("dragexit", function(aj) {
-			aj.preventDefault();
+		document.addEventListener("dragexit", function(ev) {
+			ev.preventDefault();
 		}, false);
-		document.addEventListener("drop", F, false);
-		y.addEventListener("change", ae, false);
-		H.addEventListener("click", e, false);
-		O.addEventListener("click", b, false);
-		ai();
+		document.addEventListener("drop", onDropFile, false);
+		input.addEventListener("change", onFileChanged, false);
+		browseBtn.addEventListener("click", browse, false);
+		saveBtn.addEventListener("click", viewSource, false);
+		initGUI();
 		loadImage(image);
 	}
-	function ai() {
+	function initGUI() {
 		gui = new DAT.GUI({
 			width: 280
 		});
-		guiConfig = copy(I.ABC);
+		guiConfig = copy(preset.ABC);
 		guiConfig.redraw = function() {
-			if (Q) {
-				ah();
+			if (imgLoaded) {
+				processImage();
 			}
 		};
 		guiConfig.save = function() {
-			if (Q) {
-				C();
+			if (imgLoaded) {
+				viewSource();
 			}
 		};
 		guiConfig.image = function() {
-			y.click();
+			input.click();
 		};
-		x = gui.add(guiConfig, "preset").name("Preset").options("ABC", "Pointillism", "Mosaic", "Stitch", "@#%", "Bubbles", "StarStruck", "Pixelate", "Binary", "Snow", "Dash").onChange(function(aj) {
+		x = gui.add(guiConfig, "preset").name("Preset").options("ABC", "Pointillism", "Mosaic", "Stitch", "@#%", "Bubbles", "StarStruck", "Pixelate", "Binary", "Snow", "Dash").onChange(function(setting) {
 			x.removeOption(w);
-			t(I[aj]);
+			t(preset[setting]);
 		});
 		W = gui.add(guiConfig, "filter").name("Filter").options("None", "Black & White", "Sepia").listen().onChange(D);
 		l = gui.add(guiConfig, "backgroundColor").name("Background").options({
@@ -254,65 +254,65 @@ var Textify = (function() {
 		x.prependOption(w, true);
 		guiConfig.preset = w;
 	}
-	function copy(al) {
-		var ak = {};
-		for (var aj in al) {
-			ak[aj] = al[aj];
+	function copy(obj) {
+		var cloneObj = {};
+		for (var name in obj) {
+			cloneObj[name] = obj[name];
 		}
-		return ak;
+		return cloneObj;
 	}
-	function z() {
+	function onResize() {
 		output.style.left = (window.innerWidth - a) * 0.5 + "px";
 		output.style.top = ((window.innerHeight - c) * 0.5) + 16 + "px";
 		canvas.style.left = (window.innerWidth - canvas.width) * 0.5 + "px";
 		canvas.style.top = ((window.innerHeight - canvas.height) * 0.5) + 16 + "px";
 	}
-	function e(aj) {
-		y.click();
+	function browse(ev) {
+		input.click();
 	}
-	function b(aj) {
-		if (Q) {
-			C();
+	function save(ev) {
+		if (imgLoaded) {
+			viewSource();
 		}
 	}
-	function ae(aj) {
+	function onFileChanged(aj) {
 		if (this.files.length) {
-			h(this.files[0]);
+			loadFromUrl(this.files[0]);
 		}
 	}
-	function F(ak) {
-		ak.stopPropagation();
-		ak.preventDefault();
-		var aj = ak.dataTransfer.files;
-		if (aj.length) {
-			h(aj[0]);
+	function onDropFile(ev) {
+		ev.stopPropagation();
+		ev.preventDefault();
+		var files = ev.dataTransfer.files;
+		if (files.length) {
+			loadFromUrl(files[0]);
 		}
 	}
-	function h(ak) {
-		var aj = new FileReader();
-		aj.onloadend = Z;
-		aj.readAsDataURL(ak);
+	function loadFromUrl(url) {
+		var reader = new FileReader();
+		reader.onloadend = Z;
+		reader.readAsDataURL(url);
 	}
 	function Z(aj) {
 		if (aj.target.result.match(/^data:image/gi)) {
 			guiConfig.imageURL = A;
 			img.src = aj.target.result;
-			setTimeout(ah, 100);
+			setTimeout(processImage, 100);
 		} else {
 			alert("Unexpected file format, dude.");
 		}
 	}
 	function loadImage(url) {
 		img.onload = function() {
-			Q = true;
-			ah();
+			imgLoaded = true;
+			processImage();
 		};
 		img.onerror = function() {
 			alert("Failed to load image with URL " + img.src);
 		};
 		img.src = url;
 	}
-	function ah() {
+	function processImage() {
 		j = guiConfig.useCanvas;
 		if (guiConfig.backgroundColor === "transparent") {
 			document.querySelector("html").style.background = 'url("assets/images/transparent-pattern.png")';
@@ -369,7 +369,7 @@ var Textify = (function() {
 		if (q) {
 			q.name(j ? "Save Image" : "View Source");
 		}
-		z();
+		onResize();
 		ag();
 	}
 	function d() {
@@ -430,14 +430,14 @@ var Textify = (function() {
 		}
 		if (n.length < guiConfig.characterLimit) {
 			progress.style.visibility = "visible";
-			S.style.width = (Math.min(n.length / guiConfig.characterLimit, 1) * progress.offsetWidth) + "px";
+			progressContent.style.width = (Math.min(n.length / guiConfig.characterLimit, 1) * progress.offsetWidth) + "px";
 			requestAnimFrame(ag);
 		} else {
 			progress.style.visibility = "hidden";
-			S.style.width = "0px";
+			progressContent.style.width = "0px";
 		}
 	}
-	function C() {
+	function viewSource() {
 		if (j) {
 			var al = window.open("Textify Source", "height=400, width=700, toolbar=no, scrollbars=no, menubar=no");
 			al.document.write('<img src="' + canvas.toDataURL() + '"/>');
@@ -462,7 +462,7 @@ var Textify = (function() {
 	}
 	return {
 		initialize: initialize,
-		viewSource: C
+		viewSource: viewSource
 	};
 })();
 window.requestAnimFrame = (function() {
