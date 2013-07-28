@@ -1,3 +1,10 @@
+window.requestAnimFrame = (function() {
+	return window.requestAnimationFrame || window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame || window.oRequestAnimationFrame || window.msRequestAnimationFrame ||
+	function(fn, a) {
+		window.setTimeout(fn, 1000 / 60);
+	};
+})();
+
 window.onload = function() {
 	var canvas = document.getElementById('canvas'),
 		context = canvas.getContext('2d'),
@@ -9,10 +16,11 @@ window.onload = function() {
 		fontSizeVar = 5,
 		maxWidth = 800,
 		maxHeight = 600,
-		charSet = '•',//◼▲▼◀►◆',
+		charSet = '◼•',
+		//◼▲▼◀►◆',
 		imageData, dataSize, imgWidth, imgHeight;
 
-	img.src = 'image4.jpg';
+	img.src = 'image1.jpg';
 	img.onload = function() {
 		var ratio = 1;
 		imgWidth = img.width;
@@ -23,8 +31,10 @@ window.onload = function() {
 			imgHeight = Math.floor(imgHeight * ratio);
 		}
 
-		canvas.style.width = canvas.width = imgWidth + 2 * margin;
-		canvas.style.height = canvas.height = imgHeight + 2 * margin;
+		canvas.width = imgWidth + 2 * margin;
+		canvas.style.width = (imgWidth + 2 * margin) + 'px';
+		canvas.height = imgHeight + 2 * margin;
+		canvas.style.height = (imgHeight + 2 * margin) + 'px';
 		hiddenCanvas.width = imgWidth;
 		hiddenCanvas.height = imgHeight;
 
@@ -36,25 +46,37 @@ window.onload = function() {
 		var character = charSet[Math.floor(Math.random() * charSet.length)],
 			pixelOffset, dataOffset, color, fontSize, row, col; //'◼';
 		context.translate(margin, margin);
-		for (var i = 0; i < 105000; i++) {
-			pixelOffset = Math.floor(Math.random() * dataSize);
-			dataOffset = pixelOffset * 4;
-			fontSize = Math.round((defaultFontSize + Math.random() * fontSizeVar));
-			row = Math.floor(pixelOffset / imgWidth);
-			col = Math.round(((pixelOffset / imgWidth) - row) * imgWidth);
 
-			color = {
-				r: imageData[dataOffset],
-				g: imageData[dataOffset + 1],
-				b: imageData[dataOffset + 2],
-				a: imageData[dataOffset + 3] == 0 ? 0 : (0.3 + Math.random() * 0.7).toFixed(2)
+		var count = 0;
+
+		function draw() {
+			for (var i = 0; i < 1000; i++) {
+				pixelOffset = Math.floor(Math.random() * dataSize);
+				dataOffset = pixelOffset * 4;
+				fontSize = Math.round((defaultFontSize + Math.random() * fontSizeVar));
+				row = Math.floor(pixelOffset / imgWidth);
+				col = Math.round(((pixelOffset / imgWidth) - row) * imgWidth);
+
+				color = {
+					r: imageData[dataOffset],
+					g: imageData[dataOffset + 1],
+					b: imageData[dataOffset + 2],
+					a: imageData[dataOffset + 3] == 0 ? 0 : (0.3 + Math.random() * 0.7).toFixed(2)
+				}
+
+				col -= fontSize / 2;
+				row += fontSize / 2;
+				context.font = "normal " + fontSize + "px Arial";
+				context.fillStyle = "rgba(" + color.r + "," + color.g + "," + color.b + ", " + color.a + ")";
+				context.fillText(character, col, row);
+				count++;
 			}
 
-			col -= fontSize / 2;
-			row += fontSize / 2;
-			context.font = "normal " + fontSize + "px Arial";
-			context.fillStyle = "rgba(" + color.r + "," + color.g + "," + color.b + ", " + color.a + ")";
-			context.fillText(character, col, row);
+			if (count < 105000) {
+				requestAnimFrame(draw)
+			}
 		}
+
+		draw();
 	}
 };
