@@ -12,7 +12,7 @@ window.onload = function() {
 		charSet = '•',//◼▲▼◀►◆',
 		imageData, dataSize, imgWidth, imgHeight;
 
-	img.src = 'image2.jpg';//'img/Firefox.png';
+	img.src = 'image4.jpg';
 	img.onload = function() {
 		var ratio = 1;
 		imgWidth = img.width;
